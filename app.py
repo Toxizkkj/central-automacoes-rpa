@@ -70,7 +70,7 @@ class CentralAutomacaoApp(ctk.CTk):
 
         self.combo_robos = ctk.CTkOptionMenu(
             self.frame_col_robo,
-            values=["Cadastro de Patrimônio (TI)", "Cadastro de Dietas (Nutrição)"],
+            values=["Cadastro de Patrimônio (Equipamentos)", "Cadastro de Dietas (Nutrição)"],
             command=self.ao_trocar_robo
         )
         self.combo_robos.pack(fill="x")
