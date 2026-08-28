@@ -21,6 +21,13 @@ def executar_bot_dietas(texto_bruto, log_callback, url, usuario, senha):
         page.click("body > div.login-container > div > form > button")
         page.wait_for_load_state("networkidle")
 
+        # Validação de Login com Sucesso
+        try:
+            page.wait_for_selector("body > section > div > a.system-link.nutricao", timeout=4000)
+        except Exception:
+            browser.close()
+            raise ValueError("Falha no login! Verifique o e-mail e a senha informados e tente novamente.")
+
         # Acessa Módulo de Nutrição
         page.click("body > section > div > a.system-link.nutricao")
         page.wait_for_load_state("networkidle")

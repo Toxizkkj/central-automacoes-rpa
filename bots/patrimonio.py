@@ -1,7 +1,7 @@
 import re
 from playwright.sync_api import sync_playwright
 
-def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha):
+def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha, unidade_selecionada):
     linhas = texto_bruto.strip().splitlines()
     setor_atual = None
     equipamentos = []
@@ -29,7 +29,7 @@ def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha):
         log_callback("⚠️ Nenhum equipamento válido encontrado no texto.")
         return
 
-    log_callback(f"🚀 Iniciando cadastro de {len(equipamentos)} equipamentos...")
+    log_callback(f"🚀 Iniciando cadastro de {len(equipamentos)} equipamentos na unidade: [{unidade_selecionada}]...")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
@@ -41,6 +41,13 @@ def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha):
         page.fill("#senha", senha)
         page.click("body > div.login-container > div > form > button")
         page.wait_for_load_state("networkidle")
+
+        # Validação de Login com Sucesso
+        try:
+            page.wait_for_selector("body > section > div > a.system-link.chamados", timeout=4000)
+        except Exception:
+            browser.close()
+            raise ValueError("Falha no login! Verifique o e-mail e a senha informados e tente novamente.")
 
         # Fechar pendências se houver
         try:
@@ -98,19 +105,20 @@ def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha):
             if item["modelo"]:
                 page.fill("#eq_modelo", item["modelo"])
 
-            # Local / Cliente fixo
-            page.evaluate("""() => {
+            # Local / Cliente selecionado dinamicamente
+            page.evaluate("""(unidade) => {
                 const sel = document.querySelector('#eq_local');
                 if (sel) {
                     for (let o of sel.options) {
-                        if (o.text.includes('São Geraldo (Matriz)')) {
+                        if (o.text.trim().toLowerCase() === unidade.trim().toLowerCase()) {
                             sel.value = o.value;
                             sel.dispatchEvent(new Event('change', { bubbles: true }));
+                            sel.dispatchEvent(new Event('input', { bubbles: true }));
                             break;
                         }
                     }
                 }
-            }""")
+            }""", unidade_selecionada)
             page.wait_for_timeout(300)
 
             # Setor
@@ -121,6 +129,7 @@ def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha):
                         if (o.text.trim().toLowerCase() === setor.trim().toLowerCase()) {
                             sel.value = o.value;
                             sel.dispatchEvent(new Event('change', { bubbles: true }));
+                            sel.dispatchEvent(new Event('input', { bubbles: true }));
                             break;
                         }
                     }
