@@ -26,13 +26,21 @@ def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha, unid
             })
 
     if not equipamentos:
-        log_callback("⚠️ Nenhum equipamento válido encontrado no texto.")
+        log_callback("- Nenhum equipamento válido encontrado no texto.")
         return
 
-    log_callback(f"🚀 Iniciando cadastro de {len(equipamentos)} equipamentos na unidade: [{unidade_selecionada}]...")
+    log_callback(f"- Iniciando cadastro de {len(equipamentos)} equipamentos na unidade: [{unidade_selecionada}]...")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        # Tenta abrir o Chrome nativo; se não houver, abre o Edge nativo do Windows
+        try:
+            browser = p.chromium.launch(headless=False, channel="chrome")
+        except Exception:
+            try:
+                browser = p.chromium.launch(headless=False, channel="msedge")
+            except Exception:
+                browser = p.chromium.launch(headless=False)
+
         page = browser.new_page()
 
         log_callback("Efetuando login...")
@@ -129,7 +137,6 @@ def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha, unid
                         if (o.text.trim().toLowerCase() === setor.trim().toLowerCase()) {
                             sel.value = o.value;
                             sel.dispatchEvent(new Event('change', { bubbles: true }));
-                            sel.dispatchEvent(new Event('input', { bubbles: true }));
                             break;
                         }
                     }
@@ -140,5 +147,5 @@ def executar_bot_patrimonio(texto_bruto, log_callback, url, usuario, senha, unid
             page.click("#btnGravarEq")
             page.wait_for_timeout(1000)
 
-        log_callback("✅ Todos os equipamentos foram cadastrados com sucesso!")
+        log_callback("- Todos os equipamentos foram cadastrados com sucesso!")
         browser.close()

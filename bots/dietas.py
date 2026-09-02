@@ -5,13 +5,21 @@ def executar_bot_dietas(texto_bruto, log_callback, url, usuario, senha):
     dietas = [l.strip().upper() for l in linhas if l.strip() and not any(k in l.upper() for k in ["NOME DA DIETA", "ENFERMARIAS:", "DATA:"])]
 
     if not dietas:
-        log_callback("⚠️ Nenhuma dieta válida encontrada no texto.")
+        log_callback("- Nenhuma dieta válida encontrada no texto.")
         return
 
-    log_callback(f"🚀 Iniciando cadastro de {len(dietas)} dietas...")
+    log_callback(f"- Iniciando cadastro de {len(dietas)} dietas...")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
+        # Tenta abrir o Chrome nativo; se não houver, abre o Edge nativo do Windows
+        try:
+            browser = p.chromium.launch(headless=False, channel="chrome")
+        except Exception:
+            try:
+                browser = p.chromium.launch(headless=False, channel="msedge")
+            except Exception:
+                browser = p.chromium.launch(headless=False)
+
         page = browser.new_page()
 
         log_callback("Efetuando login no sistema...")
@@ -57,5 +65,5 @@ def executar_bot_dietas(texto_bruto, log_callback, url, usuario, senha):
             page.click("button:has-text('Salvar')")
             page.wait_for_timeout(1000)
 
-        log_callback("✅ Todas as dietas foram cadastradas com sucesso!")
+        log_callback("- Todas as dietas foram cadastradas com sucesso!")
         browser.close()
