@@ -24,14 +24,15 @@ configurar_caminho_playwright()
 ctk.set_appearance_mode("Light")
 
 # Paleta de Cores
-COR_BRANCO_PURO = "#FFFFFF"        # Fundo geral
-COR_CARD_BG = "#FFFFFF"            # Fundo dos cards normais
-COR_CARD_TOPO_VERDE = "#06373A"    # Verde Escuro da marca para o cabeçalho
-COR_BORDA = "#E2E8F0"              # Borda sutil dos cards (Slate 200)
-COR_TEXTO_TITULO = "#0F172A"       # Título escuro
-COR_TEXTO_PADRAO = "#334155"       # Texto padrão
-COR_INPUT_BG = "#F8FAFC"           # Fundo dos inputs
-COR_AZUL_BOTAO = "#0284C7"         # Botão azul corporativo
+COR_BRANCO_PURO = "#FFFFFF"
+COR_CARD_BG = "#FFFFFF"
+COR_CARD_TOPO_VERDE = "#06373A"
+COR_BORDA = "#E2E8F0"
+COR_TEXTO_TITULO = "#0F172A"
+COR_TEXTO_PADRAO = "#334155"
+COR_TEXTO_MUTED = "#64748B"
+COR_INPUT_BG = "#F8FAFC"
+COR_AZUL_BOTAO = "#0284C7"
 COR_AZUL_HOVER = "#0369A1"
 COR_TEAL_MENU = "#0F766E"
 
@@ -53,8 +54,23 @@ LISTA_UNIDADES = [
     "UERJ"
 ]
 
+EXEMPLOS_FORMATO = {
+    "Cadastro de Patrimônio (Equipamentos)": (
+        "Exemplo do formato esperado ---\n"
+        "\n"
+        "Nome do Setor:\n"
+        "Nome do Equipamento - Codigo - Marca - Modelo"
+    ),
+    "Cadastro de Dietas (Nutrição)": (
+        "Exemplo do formato esperado ---\n"
+        "\n"
+        "DIETA GERAL\n"
+        "DIETA BRANDA\n"
+        "DIETA PASTOSA"
+    )
+}
+
 def obter_caminho_recurso(nome_arquivo):
-    """Obtém o caminho absoluto para arquivos de assets no Python e no PyInstaller."""
     if hasattr(sys, '_MEIPASS'):
         caminho_temp = os.path.join(sys._MEIPASS, nome_arquivo)
         if os.path.exists(caminho_temp):
@@ -68,7 +84,6 @@ def obter_caminho_recurso(nome_arquivo):
     return os.path.join(os.path.abspath("."), nome_arquivo)
 
 def arredondar_cantos_imagem(imagem, raio=12):
-    """Cria cantos arredondados na imagem com antialiasing."""
     imagem = imagem.convert("RGBA")
     mascara = Image.new("L", imagem.size, 0)
     draw = ImageDraw.Draw(mascara)
@@ -83,8 +98,8 @@ class CentralAutomacaoApp(ctk.CTk):
         super().__init__()
 
         self.title("Central de Automações — São Geraldo Service")
-        self.geometry("820x840")
-        self.minsize(700, 700)
+        self.geometry("820x870")
+        self.minsize(700, 720)
         self.configure(fg_color=COR_BRANCO_PURO)
 
         self.URL_SISTEMA = "http://192.168.0.253"
@@ -92,7 +107,7 @@ class CentralAutomacaoApp(ctk.CTk):
         self.criar_widgets()
 
     def criar_widgets(self):
-        # 1. Topo com Cabeçalho Verde Escuro
+        # 1. Topo
         self.frame_topo = ctk.CTkFrame(
             self, 
             fg_color=COR_CARD_TOPO_VERDE, 
@@ -100,7 +115,6 @@ class CentralAutomacaoApp(ctk.CTk):
         )
         self.frame_topo.pack(fill="x", padx=25, pady=(15, 10))
 
-        # Carrega a Logo com suporte a caminhos no .exe
         caminho_logo = obter_caminho_recurso("logo.png")
         if os.path.exists(caminho_logo):
             try:
@@ -143,7 +157,7 @@ class CentralAutomacaoApp(ctk.CTk):
         )
         self.lbl_subtitulo.pack(anchor="w")
 
-        # 2. Card de Credenciais
+        # 2. Credenciais
         self.frame_login = ctk.CTkFrame(self, fg_color=COR_CARD_BG, border_color=COR_BORDA, border_width=1, corner_radius=12)
         self.frame_login.pack(fill="x", padx=25, pady=(0, 10))
 
@@ -179,14 +193,13 @@ class CentralAutomacaoApp(ctk.CTk):
         )
         self.txt_senha.pack(side="left", expand=True, fill="x")
 
-        # 3. Card de Configurações do Robô
+        # 3. Configurações do Robô
         self.frame_config = ctk.CTkFrame(self, fg_color=COR_CARD_BG, border_color=COR_BORDA, border_width=1, corner_radius=12)
         self.frame_config.pack(fill="x", padx=25, pady=(0, 10))
 
         self.frame_selecao = ctk.CTkFrame(self.frame_config, fg_color="transparent")
         self.frame_selecao.pack(fill="x", padx=15, pady=12)
 
-        # Seletor Robô
         self.frame_col_robo = ctk.CTkFrame(self.frame_selecao, fg_color="transparent")
         self.frame_col_robo.pack(side="left", expand=True, fill="x", padx=(0, 10))
 
@@ -203,7 +216,6 @@ class CentralAutomacaoApp(ctk.CTk):
         )
         self.combo_robos.pack(fill="x")
 
-        # Seletor Unidade
         self.frame_col_unidade = ctk.CTkFrame(self.frame_selecao, fg_color="transparent")
         self.frame_col_unidade.pack(side="left", expand=True, fill="x")
 
@@ -219,16 +231,30 @@ class CentralAutomacaoApp(ctk.CTk):
         )
         self.combo_unidades.pack(fill="x")
 
-        # 4. Campo de Dados
+        # 4. Campo de Dados e Demonstrativo de Formato
         self.frame_dados = ctk.CTkFrame(self, fg_color=COR_CARD_BG, border_color=COR_BORDA, border_width=1, corner_radius=12)
         self.frame_dados.pack(fill="x", padx=25, pady=(0, 10))
 
         self.lbl_dados = ctk.CTkLabel(self.frame_dados, text="Dados para Cadastro (Cole a listagem aqui):", font=ctk.CTkFont(size=13, weight="bold"), text_color=COR_TEXTO_TITULO)
-        self.lbl_dados.pack(anchor="w", padx=15, pady=(10, 4))
+        self.lbl_dados.pack(anchor="w", padx=15, pady=(10, 2))
+
+        # Demonstrativo de exemplo
+        self.frame_exemplo = ctk.CTkFrame(self.frame_dados, fg_color="#F1F5F9", corner_radius=6)
+        self.frame_exemplo.pack(fill="x", padx=15, pady=(0, 8))
+
+        self.lbl_exemplo = ctk.CTkLabel(
+            self.frame_exemplo,
+            text=EXEMPLOS_FORMATO["Cadastro de Patrimônio (Equipamentos)"],
+            font=ctk.CTkFont(family="Consolas", size=11),
+            text_color=COR_TEXTO_MUTED,
+            justify="left",
+            anchor="w"
+        )
+        self.lbl_exemplo.pack(fill="x", padx=10, pady=6)
 
         self.txt_entrada = ctk.CTkTextbox(
             self.frame_dados,
-            height=130,
+            height=125,
             font=ctk.CTkFont(family="Consolas", size=12),
             fg_color=COR_INPUT_BG,
             border_color=COR_BORDA,
@@ -275,6 +301,9 @@ class CentralAutomacaoApp(ctk.CTk):
             self.combo_unidades.configure(state="disabled")
         else:
             self.combo_unidades.configure(state="normal")
+            
+        if escolha in EXEMPLOS_FORMATO:
+            self.lbl_exemplo.configure(text=EXEMPLOS_FORMATO[escolha])
 
     def adicionar_log(self, mensagem):
         self.txt_log.configure(state="normal")
