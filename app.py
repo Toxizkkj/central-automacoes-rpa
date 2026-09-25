@@ -54,6 +54,14 @@ LISTA_UNIDADES = [
     "UERJ"
 ]
 
+LISTA_CATEGORIAS_DIETA = [
+    "Básica / Oral",
+    "Enteral",
+    "Fórmula",
+    "Suplemento",
+    "Outro"
+]
+
 EXEMPLOS_FORMATO = {
     "Cadastro de Patrimônio (Equipamentos)": (
         "Exemplo do formato esperado ---\n"
@@ -64,9 +72,13 @@ EXEMPLOS_FORMATO = {
     "Cadastro de Dietas (Nutrição)": (
         "Exemplo do formato esperado ---\n"
         "\n"
+        "Dietas Orais:\n"
         "DIETA GERAL\n"
         "DIETA BRANDA\n"
-        "DIETA PASTOSA"
+        "DIETA PASTOSA\n"
+        "\n"
+        "Dietas Restritas:\n"
+        "DIETA ZERO"
     )
 }
 
@@ -98,8 +110,8 @@ class CentralAutomacaoApp(ctk.CTk):
         super().__init__()
 
         self.title("Central de Automações — São Geraldo Service")
-        self.geometry("820x870")
-        self.minsize(700, 720)
+        self.geometry("900x890")
+        self.minsize(850, 750)
         self.configure(fg_color=COR_BRANCO_PURO)
 
         self.URL_SISTEMA = "http://192.168.0.253"
@@ -200,8 +212,9 @@ class CentralAutomacaoApp(ctk.CTk):
         self.frame_selecao = ctk.CTkFrame(self.frame_config, fg_color="transparent")
         self.frame_selecao.pack(fill="x", padx=15, pady=12)
 
+        # Coluna 1: Modulo
         self.frame_col_robo = ctk.CTkFrame(self.frame_selecao, fg_color="transparent")
-        self.frame_col_robo.pack(side="left", expand=True, fill="x", padx=(0, 10))
+        self.frame_col_robo.pack(side="left", expand=True, fill="x", padx=(0, 5))
 
         self.lbl_robo = ctk.CTkLabel(self.frame_col_robo, text="Módulo / Robô:", font=ctk.CTkFont(size=13, weight="bold"), text_color=COR_TEXTO_TITULO)
         self.lbl_robo.pack(anchor="w", pady=(0, 4))
@@ -216,20 +229,50 @@ class CentralAutomacaoApp(ctk.CTk):
         )
         self.combo_robos.pack(fill="x")
 
-        self.frame_col_unidade = ctk.CTkFrame(self.frame_selecao, fg_color="transparent")
-        self.frame_col_unidade.pack(side="left", expand=True, fill="x")
-
-        self.lbl_unidade = ctk.CTkLabel(self.frame_col_unidade, text="Unidade (Local / Cliente):", font=ctk.CTkFont(size=13, weight="bold"), text_color=COR_TEXTO_TITULO)
+        # Coluna 2: Patrimônio (Unidade / Tipo Eq)
+        self.frame_col_patrimonio = ctk.CTkFrame(self.frame_selecao, fg_color="transparent")
+        
+        self.lbl_unidade = ctk.CTkLabel(self.frame_col_patrimonio, text="Unidade (Local):", font=ctk.CTkFont(size=13, weight="bold"), text_color=COR_TEXTO_TITULO)
         self.lbl_unidade.pack(anchor="w", pady=(0, 4))
 
         self.combo_unidades = ctk.CTkOptionMenu(
-            self.frame_col_unidade,
+            self.frame_col_patrimonio,
             values=LISTA_UNIDADES,
             fg_color=COR_TEAL_MENU,
             button_color="#115E59",
             height=36
         )
-        self.combo_unidades.pack(fill="x")
+        self.combo_unidades.pack(fill="x", pady=(0, 10))
+        
+        self.lbl_tipo_eq = ctk.CTkLabel(self.frame_col_patrimonio, text="Tipo (Patrimônio):", font=ctk.CTkFont(size=13, weight="bold"), text_color=COR_TEXTO_TITULO)
+        self.lbl_tipo_eq.pack(anchor="w", pady=(0, 4))
+
+        self.combo_tipo_eq = ctk.CTkOptionMenu(
+            self.frame_col_patrimonio,
+            values=["Equipamento de TI", "Equipamento da manutenção de nutrição"],
+            fg_color=COR_TEAL_MENU,
+            button_color="#115E59",
+            height=36
+        )
+        self.combo_tipo_eq.pack(fill="x")
+
+        # Coluna 3: Nutrição (Categoria)
+        self.frame_col_nutricao = ctk.CTkFrame(self.frame_selecao, fg_color="transparent")
+
+        self.lbl_categoria_dieta = ctk.CTkLabel(self.frame_col_nutricao, text="Categoria (Dietas):", font=ctk.CTkFont(size=13, weight="bold"), text_color=COR_TEXTO_TITULO)
+        self.lbl_categoria_dieta.pack(anchor="w", pady=(0, 4))
+
+        self.combo_categoria_dieta = ctk.CTkOptionMenu(
+            self.frame_col_nutricao,
+            values=LISTA_CATEGORIAS_DIETA,
+            fg_color=COR_TEAL_MENU,
+            button_color="#115E59",
+            height=36
+        )
+        self.combo_categoria_dieta.pack(fill="x", pady=(0, 10))
+
+        # Configuração inicial visível (Patrimônio por padrão)
+        self.frame_col_patrimonio.pack(side="left", expand=True, fill="x", padx=(5, 5))
 
         # 4. Campo de Dados e Demonstrativo de Formato
         self.frame_dados = ctk.CTkFrame(self, fg_color=COR_CARD_BG, border_color=COR_BORDA, border_width=1, corner_radius=12)
@@ -238,7 +281,6 @@ class CentralAutomacaoApp(ctk.CTk):
         self.lbl_dados = ctk.CTkLabel(self.frame_dados, text="Dados para Cadastro (Cole a listagem aqui):", font=ctk.CTkFont(size=13, weight="bold"), text_color=COR_TEXTO_TITULO)
         self.lbl_dados.pack(anchor="w", padx=15, pady=(10, 2))
 
-        # Demonstrativo de exemplo
         self.frame_exemplo = ctk.CTkFrame(self.frame_dados, fg_color="#F1F5F9", corner_radius=6)
         self.frame_exemplo.pack(fill="x", padx=15, pady=(0, 8))
 
@@ -298,9 +340,11 @@ class CentralAutomacaoApp(ctk.CTk):
 
     def ao_trocar_robo(self, escolha):
         if escolha == "Cadastro de Dietas (Nutrição)":
-            self.combo_unidades.configure(state="disabled")
+            self.frame_col_patrimonio.pack_forget()
+            self.frame_col_nutricao.pack(side="left", expand=True, fill="x", padx=(5, 0))
         else:
-            self.combo_unidades.configure(state="normal")
+            self.frame_col_nutricao.pack_forget()
+            self.frame_col_patrimonio.pack(side="left", expand=True, fill="x", padx=(5, 5))
             
         if escolha in EXEMPLOS_FORMATO:
             self.lbl_exemplo.configure(text=EXEMPLOS_FORMATO[escolha])
@@ -316,6 +360,8 @@ class CentralAutomacaoApp(ctk.CTk):
         senha = self.txt_senha.get().strip()
         texto = self.txt_entrada.get("1.0", "end").strip()
         unidade = self.combo_unidades.get()
+        tipo_equipamento = self.combo_tipo_eq.get()
+        categoria_dieta = self.combo_categoria_dieta.get()
         robo_selecionado = self.combo_robos.get()
 
         if not usuario or not senha:
@@ -331,9 +377,24 @@ class CentralAutomacaoApp(ctk.CTk):
         def tarefa():
             try:
                 if robo_selecionado == "Cadastro de Patrimônio (Equipamentos)":
-                    executar_bot_patrimonio(texto, self.adicionar_log, self.URL_SISTEMA, usuario, senha, unidade)
+                    executar_bot_patrimonio(
+                        texto, 
+                        self.adicionar_log, 
+                        self.URL_SISTEMA, 
+                        usuario, 
+                        senha, 
+                        unidade, 
+                        tipo_equipamento_selecionado=tipo_equipamento
+                    )
                 elif robo_selecionado == "Cadastro de Dietas (Nutrição)":
-                    executar_bot_dietas(texto, self.adicionar_log, self.URL_SISTEMA, usuario, senha)
+                    executar_bot_dietas(
+                        texto, 
+                        self.adicionar_log, 
+                        self.URL_SISTEMA, 
+                        usuario, 
+                        senha,
+                        categoria_selecionada=categoria_dieta
+                    )
             except ValueError as ve:
                 self.adicionar_log(f"- {ve}")
             except Exception as e:
