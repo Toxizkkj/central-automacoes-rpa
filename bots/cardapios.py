@@ -104,7 +104,7 @@ def preencher_autocomplete_com_cadastro(page, seletor_input, seletor_btn_mais, v
     page.fill(seletor_input, "")
     page.wait_for_timeout(50)
     page.fill(seletor_input, valor_texto)
-    page.wait_for_timeout(400)  # Reduzido de 1000 para 400ms
+    page.wait_for_timeout(400)  
     
     msg_nenhum = page.locator("text=/Nenhum produto/i").first.is_visible()
     
@@ -142,15 +142,36 @@ def preencher_autocomplete_com_cadastro(page, seletor_input, seletor_btn_mais, v
     
     if precisa_cadastrar:
         page.locator(seletor_btn_mais).click(timeout=3000)
-        page.wait_for_timeout(300) # Reduzido de 600
+        page.wait_for_timeout(300) 
         
         page.locator("#itemExtraNome").fill(valor_texto)
-        page.wait_for_timeout(100)
+        page.wait_for_timeout(200)
         page.locator("#itemExtraOverlay > div > div.item-extra-footer > button.btn.btn-primary.btn-sm").click()
-        page.wait_for_timeout(400) # Reduzido de 1000
+        page.wait_for_timeout(600) 
+        
+        # 1. Trata o popup de sucesso "OK" se o sistema jogar na tela
+        try:
+            btn_ok_extra = page.locator('.swal2-confirm, button:has-text("OK")').first
+            if btn_ok_extra.is_visible(timeout=500):
+                btn_ok_extra.click()
+                page.wait_for_timeout(300)
+        except: pass
+        
+        # 2. Clica orgânicamente no "X" ou aperta "ESC" para sair da tela de cadastro de item
+        try:
+            if page.locator("#itemExtraOverlay").is_visible():
+                btn_fechar_x = page.locator("#itemExtraOverlay .close, #itemExtraOverlay button.close, #itemExtraOverlay button:has-text('×')").first
+                if btn_fechar_x.is_visible(timeout=500):
+                    btn_fechar_x.click()
+                else:
+                    page.keyboard.press("Escape")
+        except:
+            page.keyboard.press("Escape")
+            
+        page.wait_for_timeout(300)
         
         page.fill(seletor_input, valor_texto)
-        page.wait_for_timeout(400) # Reduzido de 800
+        page.wait_for_timeout(400) 
         
         page.evaluate(js_caca_item, valor_texto)
         page.wait_for_timeout(150)
@@ -362,7 +383,7 @@ def executar_bot_cardapios(texto_bruto, pdf_path, log_callback, url, usuario, se
             page.fill("#buscaDieta", "")
             page.wait_for_timeout(100)
             page.fill("#buscaDieta", dieta_nome)
-            page.wait_for_timeout(600) # Reduzido para ficar mais ágil na busca
+            page.wait_for_timeout(600) 
             
             js_clica_dieta_exata = """(dietaAlvo) => {
                 const rows = document.querySelectorAll('#tabelaCardapiosBody tr');
@@ -390,7 +411,7 @@ def executar_bot_cardapios(texto_bruto, pdf_path, log_callback, url, usuario, se
             if not clicou_correto:
                 log_callback(f"Aviso: Não encontrou maçã ou botão editar para a dieta exata [{dieta_nome}]. Pulando.")
                 continue
-                
+            
             try:
                 page.wait_for_selector("#cardapioModalOverlay", state="visible", timeout=4000)
             except Exception:
@@ -434,7 +455,7 @@ def executar_bot_cardapios(texto_bruto, pdf_path, log_callback, url, usuario, se
                     
                     try:
                         page.locator(abas_selector).first.click(timeout=2000)
-                        page.wait_for_timeout(200) # Reduzido de 400
+                        page.wait_for_timeout(200) 
                     except Exception: continue 
                     
                     is_refeicao_grande = nome_refeicao.upper() in ["ALMOÇO", "JANTAR"]
@@ -457,7 +478,7 @@ def executar_bot_cardapios(texto_bruto, pdf_path, log_callback, url, usuario, se
                         
                     try:
                         page.locator("#cardapioModalOverlay > div > div.cardapio-modal-body > div > div.cardapio-toolbar > button.btn.btn-primary.btn-sm, button:has-text('Salvar')").first.click(timeout=3000)
-                        page.wait_for_timeout(400) # Reduzido de 800
+                        page.wait_for_timeout(400) 
                         
                         try:
                             btn_ok_salvar = page.locator('.swal2-confirm, button:has-text("OK")').first
