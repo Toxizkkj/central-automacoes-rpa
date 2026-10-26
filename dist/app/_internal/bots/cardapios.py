@@ -330,9 +330,10 @@ def executar_bot_cardapios(texto_bruto, pdf_path, log_callback, url, usuario, se
         page.wait_for_timeout(300)
 
         log_callback("FASE 2: Iniciando cadastro dos Cardápios...")
-        page.click("#cadastro-submenu > li:nth-child(9) > a > span", timeout=3000) 
+        page.click("#cadastro-submenu > li:nth-child(9) > a > span", timeout=10000) 
         page.wait_for_load_state("networkidle")
-        page.wait_for_timeout(500)
+        page.wait_for_selector("#buscaDieta", state="visible", timeout=15000)
+        page.wait_for_timeout(1000)
             
         seletores_tabs = {
             "Desjejum": "#abasHorario > button.tab.active, #abasHorario > button:nth-child(1)",
@@ -503,9 +504,10 @@ def executar_bot_cardapios(texto_bruto, pdf_path, log_callback, url, usuario, se
             page.wait_for_timeout(600)
             
             try:
-                page.click("#cadastro-submenu > li:nth-child(9) > a > span", timeout=3000) 
+                page.click("#cadastro-submenu > li:nth-child(9) > a > span", timeout=10000) 
                 page.wait_for_load_state("networkidle")
-                page.wait_for_timeout(500)
+                page.wait_for_selector("#buscaDieta", state="visible", timeout=15000)
+                page.wait_for_timeout(1000)
             except:
                 pass
             
